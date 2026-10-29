@@ -1,0 +1,79 @@
+# Local stack and the CI smoke-test environment: the application image plus
+# PostgreSQL and Redis. Only the app port is published, and only on localhost.
+name: laravel-cicd-pipeline
+
+x-app-env: &app-env
+  APP_NAME: laravel-cicd-pipeline
+  DB_CONNECTION: pgsql
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: app
+  DB_USERNAME: app
+  DB_PASSWORD: ${DB_PASSWORD:-app-local-only}
+  REDIS_HOST: redis
+  CACHE_STORE: redis
+  METRICS_STORE: redis
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-app-local-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4.12-alpine
+    # Start as the redis user directly: with all capabilities dropped the
+    # image's entrypoint could not switch users itself.
+    user: redis
+    <<: *hardening
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # One-off schema migration, run before the app starts.
+  migrate:
+    image: ${APP_IMAGE:-laravel-cicd-pipeline:local}
+    <<: *hardening
+    environment: *app-env
+    entrypoint: ["php", "/var/www/html/artisan", "migrate", "--force", "--no-interaction"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: ${APP_IMAGE:-laravel-cicd-pipeline:local}
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        APP_COMMIT: ${APP_COMMIT:-unknown}
+    <<: *hardening
+    environment: *app-env
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

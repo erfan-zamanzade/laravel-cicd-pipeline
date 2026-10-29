@@ -1,0 +1,25 @@
+# Only what the runtime needs goes into the build context.
+.git
+.github
+.gitlab-ci.yml
+.editorconfig
+.phpunit.cache
+.env
+.env.*
+!.env.example
+*.md
+docs
+scripts
+tests
+vendor
+node_modules
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*.php
+docker-compose.yml
+Makefile
+phpstan.neon
+phpunit.xml
+pint.json
