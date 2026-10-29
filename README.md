@@ -4,7 +4,7 @@
 
 A production-style CI/CD pipeline for a containerised PHP service, built with GitHub Actions and mirrored in GitLab CI.
 
-The application is intentionally tiny: a Laravel service that exposes health, readiness, build info and Prometheus metrics. **The pipeline and the operational behaviour are the point of this repository**, not the business logic. The same image is the deployment target of the upcoming k3s platform lab (in progress).
+The application is intentionally tiny: a Laravel service that exposes health, readiness, build info and Prometheus metrics. **The pipeline and the operational behaviour are the point of this repository**, not the business logic. The same image is deployed, monitored and failure-tested on Kubernetes in [k3s-platform-lab](https://github.com/erfan-zamanzade/k3s-platform-lab).
 
 ## What it demonstrates
 
@@ -101,7 +101,7 @@ The `image` job fails the pipeline if the smoke test fails, or if Trivy finds a 
 
 The pipeline's deliverable is a scanned, attested image in GHCR. Deployments should reference the immutable `sha-<commit>` tag or the digest, never `main`.
 
-Deployment itself is the job of the upcoming k3s platform lab (Helm chart with readiness/liveness probes wired to `/ready` and `/health`, rolling updates and rollback). Until that repository is published, the image can be run anywhere Docker runs:
+Deployment itself is the job of [k3s-platform-lab](https://github.com/erfan-zamanzade/k3s-platform-lab): a Helm chart with readiness and liveness probes wired to `/ready` and `/health`, zero-downtime rolling updates, rollback, monitoring and failure drills. Locally the image runs anywhere Docker runs:
 
 ```bash
 docker compose up --detach --wait   # uses APP_IMAGE if set, e.g. ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-<commit>
@@ -139,7 +139,7 @@ $0. Public repository, GitHub Actions minutes for public repos, GHCR for public 
 
 - The application is a demo vehicle; it has no business logic, authentication or rate limiting.
 - `.gitlab-ci.yml` is validated and partially executed locally with [gitlab-ci-local](https://github.com/firecow/gitlab-ci-local); the `build`, `scan` and `publish` jobs need a GitLab registry and have not been run on gitlab.com.
-- `http_request_duration_seconds_sum` gives average latency, not percentiles; histograms come with the monitoring work in the platform lab.
+- `http_request_duration_seconds_sum` gives average latency, not percentiles.
 - GHCR packages may start private; the owner sets visibility to public once in the package settings.
 
 ## Verification evidence
@@ -148,13 +148,13 @@ All results below come from real runs; nothing is simulated.
 
 | Check | Where | Result |
 |-------|-------|--------|
-| Release `v1.0.0` | [Run 40900286656](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900286656) | All 5 jobs passed; published `1.0.0`, `1.0`, `latest` |
-| Full GitHub Actions pipeline incl. GHCR publish | [Run 40900283468](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900283468) (commit `fd36fa4`) | All 5 jobs passed |
-| Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 13 tests, 33 assertions, 0 failures; line coverage 92.93% (92/99) |
-| Smoke test + database and Redis failure drills in CI | same run, `image` job | Passed |
+| Release `v1.0.1` | [Run 40905804051](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40905804051) (commit `c6a4cf3`) | All 5 jobs passed; published `1.0.1`, `1.0`, `latest` |
+| Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 13 tests, 33 assertions, 0 failures; line coverage 93.07% (94/101) |
+| Smoke test + PostgreSQL and Redis failure drills in CI | same run, `image` job | Passed |
 | Vulnerability gate (Trivy 0.67.2) | same run | 0 fixable HIGH/CRITICAL |
-| Published image runs on arm64 | `ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-fd36fa4` pulled anonymously on an arm64 Linux server, smoke test run against it | Passed on 2026-10-29 |
-| Build provenance | GitHub attestation for the published digest | Present: in-toto attestation listed by the GitHub attestations API for the published digest |
+| Published image runs on arm64 | `1.0.1` pulled anonymously on an arm64 Linux server and run in Kubernetes by [k3s-platform-lab](https://github.com/erfan-zamanzade/k3s-platform-lab) (smoke test, rollout and failure drills) | Passed on 2026-10-29 |
+| Release `v1.0.0` | [Run 40900286656](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900286656) | All 5 jobs passed; published `1.0.0` |
+| Build provenance | GitHub attestation for the published `1.0.1` digest | Present: in-toto attestation listed by the GitHub attestations API for the published digest |
 | Full local pipeline (`make ci`) | arm64 Linux server, Docker 29.3 | Passed on 2026-10-29 |
 | GitLab jobs `quality`, `dockerfile`, `tests` | gitlab-ci-local 4.77.0 with PostgreSQL + Redis services | Passed on 2026-10-29 |
 | Workflow lint | actionlint 1.7.7, zizmor | No findings |
