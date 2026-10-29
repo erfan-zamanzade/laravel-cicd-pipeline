@@ -176,6 +176,7 @@ jobs:
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Build image
+        id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
@@ -205,32 +206,34 @@ jobs:
         if: always()
         run: docker compose down --volumes
 
-      - name: Vulnerability scan (fail on fixable HIGH/CRITICAL)
+      # Full report first (never fails the job), so it is uploaded even when
+      # the gate below fails.
+      - name: Vulnerability report for code scanning
+        if: always() && steps.build.outcome == 'success'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.LOCAL_IMAGE }}
           version: v0.67.2
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: "1"
-          format: table
+          format: sarif
+          output: trivy.sarif
 
-      - name: Vulnerability report for code scanning
-        if: always()
+      - name: Upload vulnerability report
+        if: always() && steps.build.outcome == 'success' && github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-image
+
+      - name: Vulnerability gate (fail on fixable HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.LOCAL_IMAGE }}
           version: v0.67.2
           skip-setup-trivy: true
-          format: sarif
-          output: trivy.sarif
-
-      - name: Upload vulnerability report
-        if: always() && github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
-        with:
-          sarif_file: trivy.sarif
-          category: trivy-image
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
 
       - name: Generate SBOM (SPDX)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3

@@ -52,7 +52,9 @@ ENV APP_ENV=production \
     # one-off step so several replicas never race to migrate the schema.
     AUTORUN_ENABLED=true \
     AUTORUN_LARAVEL_MIGRATION=false \
-    AUTORUN_LARAVEL_STORAGE_LINK=false
+    AUTORUN_LARAVEL_STORAGE_LINK=false \
+    # A JSON-only service has no Blade views to compile.
+    AUTORUN_LARAVEL_VIEW_CACHE=false
 
 # Pull OS security fixes published after the base image was built (the
 # vulnerability scan in CI fails on fixable HIGH/CRITICAL findings).
