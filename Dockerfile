@@ -6,7 +6,9 @@
 # Stage 1: resolve production dependencies. Composer, its cache and the dev
 # packages never reach the runtime image.
 # ---------------------------------------------------------------------------
-FROM composer:2.10.3 AS vendor
+# Vendor files are architecture-independent, so this stage always runs natively
+# on the build host, even when the runtime stage is built for another platform.
+FROM --platform=$BUILDPLATFORM composer:2.10.3 AS vendor
 
 WORKDIR /app
 

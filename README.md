@@ -17,6 +17,7 @@ The application is intentionally tiny: a Laravel service that exposes health, re
 | Container validation | `docker compose` stack + smoke test, including a database failure drill |
 | Supply-chain security | `composer audit`, Trivy image scan (gate + SARIF to code scanning), SPDX SBOM, build provenance attestation, actions pinned to commit SHAs, Dependabot with a 7-day cooldown, workflow audited with zizmor |
 | Least privilege | Workflow defaults to `contents: read`; only the publish job can write packages |
+| Multi-architecture | Published for `linux/amd64` and `linux/arm64` (vendor stage runs natively, runtime stage under QEMU) |
 | Reproducible tagging | Images tagged `sha-<commit>` (immutable), branch, and SemVer from `v*.*.*` tags; version and commit baked into the image and reported at `/` |
 | Secrets | None required: the registry login uses the short-lived `GITHUB_TOKEN`; no credentials are stored in the repo |
 
