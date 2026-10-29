@@ -50,7 +50,7 @@ flowchart LR
 | Path | Purpose | Depends on |
 |------|---------|------------|
 | `/` | Name, version, commit, PHP and Laravel versions | — |
-| `/health` | Liveness: the process serves PHP | nothing (so a database outage never restarts the container) |
+| `/health` | Liveness: the process serves PHP | nothing (so a database or Redis outage never restarts the container) |
 | `/ready` | Readiness: database and cache reachable, with per-check latency; `503` otherwise | PostgreSQL, Redis |
 | `/metrics` | Prometheus text format: `app_info`, `http_requests_total`, `http_request_duration_seconds_sum` by method, route pattern and status | Redis |
 
@@ -150,8 +150,8 @@ All results below come from real runs; nothing is simulated.
 |-------|-------|--------|
 | Release `v1.0.0` | [Run 40900286656](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900286656) | All 5 jobs passed; published `1.0.0`, `1.0`, `latest` |
 | Full GitHub Actions pipeline incl. GHCR publish | [Run 40900283468](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900283468) (commit `fd36fa4`) | All 5 jobs passed |
-| Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 12 tests, 31 assertions, 0 failures; line coverage 92.93% (92/99) |
-| Smoke test + database failure drill in CI | same run, `image` job | Passed |
+| Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 13 tests, 33 assertions, 0 failures; line coverage 92.93% (92/99) |
+| Smoke test + database and Redis failure drills in CI | same run, `image` job | Passed |
 | Vulnerability gate (Trivy 0.67.2) | same run | 0 fixable HIGH/CRITICAL |
 | Published image runs on arm64 | `ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-fd36fa4` pulled anonymously on an arm64 Linux server, smoke test run against it | Passed on 2026-10-29 |
 | Build provenance | GitHub attestation for the published digest | Present: in-toto attestation listed by the GitHub attestations API for the published digest |
@@ -167,6 +167,7 @@ These are kept as evidence that the gates do real work:
 2. **Container that only started on my machine** — Laravel's start-up optimisation compiled views from `resources/views`, an empty directory that git does not track. The CI smoke test caught the crash on a clean checkout; view caching is now disabled for this JSON-only service.
 3. **Lint drift** — the CI hadolint version flagged non-numeric `USER` instructions that the older local version accepted; the Dockerfile now uses numeric UIDs and all environments use the same hadolint version.
 4. **Architecture gap** — the first published image was amd64-only and could not run on an arm64 host; publishing is now multi-arch.
+5. **Redis outage restarted the service** (fixed in `v1.0.1`) — a failure drill in the [k3s platform lab](https://github.com/erfan-zamanzade/k3s-platform-lab) showed that `1.0.0` answered every request, including `/health`, with HTTP 500 when Redis was unreachable: the metrics store connected to Redis while being constructed, before the middleware's error handling. Kubernetes would restart every pod during a Redis outage. The connection is now opened lazily, a feature test covers it, and the smoke test has a Redis outage drill (it fails against `1.0.0` and passes against `1.0.1`).
 
 ## Future improvements
 

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Support\Metrics\MetricsStore;
+use App\Support\Metrics\RedisMetricsStore;
+use Illuminate\Contracts\Redis\Factory;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
@@ -54,5 +56,21 @@ class MetricsTest extends TestCase
         });
 
         $this->get('/health')->assertOk();
+    }
+
+    public function test_an_unreachable_redis_does_not_fail_liveness(): void
+    {
+        // The store is built for every request; if building it connected to
+        // Redis, a Redis outage would fail /health and restart every pod.
+        $unreachable = new class implements Factory
+        {
+            public function connection($name = null)
+            {
+                throw new \RedisException('getaddrinfo for redis-typo failed');
+            }
+        };
+        $this->app->instance(MetricsStore::class, new RedisMetricsStore($unreachable, null, 'metrics:'));
+
+        $this->get('/health')->assertOk()->assertJson(['status' => 'ok']);
     }
 }

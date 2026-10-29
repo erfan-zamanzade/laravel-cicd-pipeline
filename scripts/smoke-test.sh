@@ -6,6 +6,7 @@
 # 3. Failure drill: with PostgreSQL stopped, /ready turns 503 while /health
 #    stays 200 (so an orchestrator stops routing traffic instead of
 #    restarting the container), then recovers once PostgreSQL is back.
+#    The same for Redis, which also stores the request metrics.
 #
 # Usage: scripts/smoke-test.sh [base-url]   (default http://127.0.0.1:${APP_PORT:-8080})
 set -euo pipefail
@@ -50,5 +51,14 @@ pass "/health stays 200 (container is not restarted for a dependency outage)"
 
 docker compose start postgres >/dev/null 2>&1
 wait_for /ready 200 && pass "/ready recovers after PostgreSQL is back"
+
+echo "Failure drill: stopping Redis (cache and metrics backend)"
+docker compose stop redis >/dev/null 2>&1
+wait_for /ready 503 && pass "/ready returns 503 while Redis is down"
+[ "$(status_of /health)" = 200 ] || fail "/health must stay 200 while Redis is down"
+pass "/health stays 200 (losing the metrics backend never fails a request)"
+
+docker compose start redis >/dev/null 2>&1
+wait_for /ready 200 && pass "/ready recovers after Redis is back"
 
 echo "All smoke tests passed."
