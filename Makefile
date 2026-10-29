@@ -40,6 +40,6 @@ scan: ## Scan the image for fixable HIGH/CRITICAL vulnerabilities
 		image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 laravel-cicd-pipeline:local
 
 hadolint: ## Lint the Dockerfile
-	docker run --rm -i hadolint/hadolint:v2.12.0 < Dockerfile
+	docker run --rm -i hadolint/hadolint:v2.15.1 hadolint --failure-threshold info - < Dockerfile
 
 ci: check hadolint build up smoke scan down ## Run the whole pipeline locally

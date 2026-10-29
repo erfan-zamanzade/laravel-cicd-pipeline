@@ -37,3 +37,9 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    # Database and cache major versions are upgraded deliberately, not by bot.
+    ignore:
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+      - dependency-name: redis
+        update-types: ["version-update:semver-major"]

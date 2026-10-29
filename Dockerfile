@@ -56,12 +56,13 @@ ENV APP_ENV=production \
 
 # Pull OS security fixes published after the base image was built (the
 # vulnerability scan in CI fails on fixable HIGH/CRITICAL findings).
-USER root
+# Numeric IDs (82 = www-data on Alpine) let Kubernetes verify runAsNonRoot.
+USER 0
 # hadolint ignore=DL3017
 RUN apk upgrade --no-cache
-USER www-data
+USER 82:82
 
-COPY --chown=www-data:www-data --from=vendor /app /var/www/html
+COPY --chown=82:82 --from=vendor /app /var/www/html
 
 RUN php artisan package:discover --ansi
 
