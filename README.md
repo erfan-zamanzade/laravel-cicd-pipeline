@@ -59,7 +59,7 @@ Request counters live in Redis so they are shared across PHP-FPM workers and rep
 
 - **GitHub Actions** as the primary CI: free for public repositories, native GHCR and attestation support. **GitLab CI** equivalent in [`.gitlab-ci.yml`](.gitlab-ci.yml) because many teams (including my previous ones) run GitLab with self-managed runners.
 - **[serversideup/php](https://serversideup.net/open-source/docker-php/)** base image: maintained Nginx + PHP-FPM image that runs unprivileged on port 8080 and ships a working healthcheck. Pinned to an exact version.
-- **Trivy** for image scanning and **Syft** (via `anchore/sbom-action`) for the SBOM: both open source, no account needed.
+- **Trivy** for image scanning (run from its official image pinned by digest) and **Syft** (via `anchore/sbom-action`) for the SBOM: both open source, no account needed.
 - **Migrations as a one-off step** (`migrate` service in Compose), not on container start, so several replicas never race on the schema.
 
 ## Run it locally
