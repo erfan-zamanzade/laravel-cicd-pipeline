@@ -144,12 +144,28 @@ $0. Public repository, GitHub Actions minutes for public repos, GHCR for public 
 
 ## Verification evidence
 
+All results below come from real runs; nothing is simulated.
+
 | Check | Where | Result |
 |-------|-------|--------|
-| Full local pipeline (`make ci`) | Ubuntu server, Docker 29.3 | Passed on 2026-10-29 |
-| GitLab jobs `quality`, `dockerfile`, `tests` | gitlab-ci-local 4.77.0, PostgreSQL + Redis services | Passed on 2026-10-29 |
-| GitHub Actions | [Actions tab](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/workflows/ci.yml) | See latest run |
+| Full GitHub Actions pipeline incl. GHCR publish | [Run 40868507712](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40868507712) (commit `2af8fea`) | All 5 jobs passed |
+| Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 12 tests, 31 assertions, 0 failures; line coverage 92.93% (92/99) |
+| Smoke test + database failure drill in CI | same run, `image` job | Passed |
+| Vulnerability gate (Trivy 0.67.2) | same run | 0 fixable HIGH/CRITICAL |
+| Published image runs on arm64 | `ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-2af8fea` pulled anonymously on an arm64 Linux server, smoke test run against it | Passed on 2026-10-29 |
+| Build provenance | GitHub attestation for the published digest | Present: in-toto attestation listed by the GitHub attestations API for the published digest |
+| Full local pipeline (`make ci`) | arm64 Linux server, Docker 29.3 | Passed on 2026-10-29 |
+| GitLab jobs `quality`, `dockerfile`, `tests` | gitlab-ci-local 4.77.0 with PostgreSQL + Redis services | Passed on 2026-10-29 |
 | Workflow lint | actionlint 1.7.7, zizmor | No findings |
+
+### Issues the pipeline caught while it was being built
+
+These are kept as evidence that the gates do real work:
+
+1. **Fixable CVE in the base image** — Trivy failed the build on a HIGH `curl` vulnerability; fixed by applying Alpine security updates during the build.
+2. **Container that only started on my machine** — Laravel's start-up optimisation compiled views from `resources/views`, an empty directory that git does not track. The CI smoke test caught the crash on a clean checkout; view caching is now disabled for this JSON-only service.
+3. **Lint drift** — the CI hadolint version flagged non-numeric `USER` instructions that the older local version accepted; the Dockerfile now uses numeric UIDs and all environments use the same hadolint version.
+4. **Architecture gap** — the first published image was amd64-only and could not run on an arm64 host; publishing is now multi-arch.
 
 ## Future improvements
 
