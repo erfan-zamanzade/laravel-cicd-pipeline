@@ -148,12 +148,12 @@ All results below come from real runs; nothing is simulated.
 
 | Check | Where | Result |
 |-------|-------|--------|
-| Release `v1.0.0` | [Run 40869804678](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40869804678) | Published `1.0.0`, `1.0`, `latest` |
-| Full GitHub Actions pipeline incl. GHCR publish | [Run 40868507712](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40868507712) (commit `2af8fea`) | All 5 jobs passed |
+| Release `v1.0.0` | [Run 40900286656](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900286656) | All 5 jobs passed; published `1.0.0`, `1.0`, `latest` |
+| Full GitHub Actions pipeline incl. GHCR publish | [Run 40900283468](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40900283468) (commit `fd36fa4`) | All 5 jobs passed |
 | Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 12 tests, 31 assertions, 0 failures; line coverage 92.93% (92/99) |
 | Smoke test + database failure drill in CI | same run, `image` job | Passed |
 | Vulnerability gate (Trivy 0.67.2) | same run | 0 fixable HIGH/CRITICAL |
-| Published image runs on arm64 | `ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-2af8fea` pulled anonymously on an arm64 Linux server, smoke test run against it | Passed on 2026-10-29 |
+| Published image runs on arm64 | `ghcr.io/erfan-zamanzade/laravel-cicd-pipeline:sha-fd36fa4` pulled anonymously on an arm64 Linux server, smoke test run against it | Passed on 2026-10-29 |
 | Build provenance | GitHub attestation for the published digest | Present: in-toto attestation listed by the GitHub attestations API for the published digest |
 | Full local pipeline (`make ci`) | arm64 Linux server, Docker 29.3 | Passed on 2026-10-29 |
 | GitLab jobs `quality`, `dockerfile`, `tests` | gitlab-ci-local 4.77.0 with PostgreSQL + Redis services | Passed on 2026-10-29 |
