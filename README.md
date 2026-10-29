@@ -93,7 +93,7 @@ In CI the same test suite runs against real PostgreSQL and Redis (see the `tests
 |---------|------|
 | Pull request | quality, tests, dockerfile → image |
 | Push to `main` | as above → publish `sha-<commit>` and `main` |
-| Tag `vX.Y.Z` | as above → publish `X.Y.Z`, `X.Y` and `sha-<commit>` |
+| Tag `vX.Y.Z` | as above → publish `X.Y.Z`, `X.Y`, `latest` and `sha-<commit>` |
 
 The `image` job fails the pipeline if the smoke test fails, or if Trivy finds a HIGH or CRITICAL vulnerability that already has a fix. That gate caught a real issue while building this project: the base image shipped a `curl` with CVE-2026-92392; the Dockerfile now applies OS security updates on build.
 
@@ -148,6 +148,7 @@ All results below come from real runs; nothing is simulated.
 
 | Check | Where | Result |
 |-------|-------|--------|
+| Release `v1.0.0` | [Run 40869804678](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40869804678) | Published `1.0.0`, `1.0`, `latest` |
 | Full GitHub Actions pipeline incl. GHCR publish | [Run 40868507712](https://github.com/erfan-zamanzade/laravel-cicd-pipeline/actions/runs/40868507712) (commit `2af8fea`) | All 5 jobs passed |
 | Tests against PostgreSQL 17 + Redis 7 | same run, `test-reports` artifact | 12 tests, 31 assertions, 0 failures; line coverage 92.93% (92/99) |
 | Smoke test + database failure drill in CI | same run, `image` job | Passed |
