@@ -4,7 +4,7 @@
 
 A production-style CI/CD pipeline for a containerised PHP service, built with GitHub Actions and mirrored in GitLab CI.
 
-The application is intentionally tiny: a Laravel service that exposes health, readiness, build info and Prometheus metrics. **The pipeline and the operational behaviour are the point of this repository**, not the business logic. The same image is deployed, monitored and failure-tested on Kubernetes in [k3s-platform-lab](https://github.com/erfan-zamanzade/k3s-platform-lab).
+The application is intentionally tiny: a Laravel service that exposes health, readiness, build info and Prometheus metrics. **The pipeline and the operational behaviour are the point of this repository**, not the business logic. The same image is deployed, monitored and failure-tested on Kubernetes in [k3s-platform-lab](https://github.com/erfan-zamanzade/k3s-platform-lab), and on a single hardened Docker host behind Nginx, with backups and restore drills, in [ansible-server-baseline](https://github.com/erfan-zamanzade/ansible-server-baseline).
 
 ## What it demonstrates
 
@@ -34,6 +34,7 @@ flowchart LR
     I -->|"push to main or v* tag"| P["publish<br/>clean build → GHCR<br/>SBOM + provenance attestation"]
     P --> R[("ghcr.io/erfan-zamanzade/<br/>laravel-cicd-pipeline")]
     R -.->|"deployed by"| K["k3s-platform-lab<br/>(Helm)"]
+    R -.->|"deployed by"| A["ansible-server-baseline<br/>(Docker Compose)"]
 ```
 
 Runtime layout of the image:
