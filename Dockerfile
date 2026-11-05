@@ -28,7 +28,7 @@ RUN composer dump-autoload --no-dev --optimize --classmap-authoritative --no-scr
 # ---------------------------------------------------------------------------
 # Stage 2: runtime. Nginx + PHP-FPM, running as the unprivileged www-data user.
 # ---------------------------------------------------------------------------
-FROM serversideup/php:8.4-fpm-nginx-alpine3.24-v5.0.5 AS runtime
+FROM serversideup/php:8.5-fpm-nginx-alpine3.24-v5.0.5 AS runtime
 
 ARG APP_VERSION=dev
 ARG APP_COMMIT=unknown
