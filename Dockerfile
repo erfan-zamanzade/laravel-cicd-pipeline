@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 # Vendor files are architecture-independent, so this stage always runs natively
 # on the build host, even when the runtime stage is built for another platform.
-FROM --platform=$BUILDPLATFORM composer:2.10.3 AS vendor
+FROM --platform=$BUILDPLATFORM composer:2.11.0 AS vendor
 
 WORKDIR /app
 
